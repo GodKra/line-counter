@@ -20,9 +20,8 @@ type supportedType string
 const (
 	goFiles  supportedType = "Go"
 	rust     supportedType = "Rust"
-	comment  supportedType = "Comment"
+	comment  supportedType = "Comments"
 	markdown supportedType = "Markdown"
-	text     supportedType = "Text"
 	kotlin   supportedType = "Kotlin"
 	java     supportedType = "Java"
 )
@@ -62,8 +61,8 @@ func (c counter) total() int {
 	return total
 }
 
-// getElems Returns a []string which contains the map as "Key: Value", where key is the file type and
-// value is line count of that file.
+// getElems Returns a []string which contains everything in the map as "Key: Value", where key is the file type
+// and value is line count of that file.
 func (c counter) getElems() []string {
 	slice := make([]string, len(c.lineCounts))
 	i := 0
@@ -179,8 +178,6 @@ func count(file *os.File) (counter, error) {
 		countr.fileAdd(comments, lines, true, goFiles, file)
 	case ".md":
 		countr.fileAdd(comments, lines, false, markdown, file)
-	case ".txt":
-		countr.fileAdd(comments, lines, false, text, file)
 	case ".rs":
 		countr.fileAdd(comments, lines, true, rust, file)
 	case ".kt":
@@ -192,7 +189,7 @@ func count(file *os.File) (counter, error) {
 	return countr, nil
 }
 
-// Prints as "<FileType>: <FilePath>" if verbose is true
+// Prints the current file being read as "<FileType>: <FilePath>" if verbose is true.
 func printFiles(fileType supportedType, file *os.File) {
 	if *verbose {
 		fmt.Printf("%v: %v\n", fileType, file.Name())

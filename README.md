@@ -7,6 +7,5 @@ A simple program to count lines of a file/project. It only counts the files whic
 * Kotlin (.kt)
 * Java (.java)
 * Markdown (.md)
-* Text (.txt)
 
 More types will be added later.
