@@ -24,6 +24,7 @@ const (
 	markdown supportedType = "Markdown"
 	kotlin   supportedType = "Kotlin"
 	java     supportedType = "Java"
+	c        supportedType = "C"
 )
 
 // counter contains information of the line count and number of files counted
@@ -32,9 +33,15 @@ type counter struct {
 	fileCount  int
 }
 
-// fileAdd Adds the number of lines and comments in a file to the counter. It also prints the
-// file using printFiles()
-func (c *counter) fileAdd(comments, lines int, isLang bool, fileType supportedType, file *os.File) {
+// fileAdd Adds the number of lines and comments in a file to the counter. If isLang
+// (Indicates whether it is a language or not) is false, number of comments will be added
+// to the line count It also prints the file using printFiles()
+func (c *counter) fileAdd(isLang bool, fileType supportedType, file *os.File) error {
+	c.fileCount++
+	lines, comments, e := lineCount(file)
+	if e != nil {
+		return e
+	}
 	printFiles(fileType, file)
 	if isLang {
 		c.lineCounts[fileType] = lines
@@ -42,6 +49,7 @@ func (c *counter) fileAdd(comments, lines int, isLang bool, fileType supportedTy
 	} else {
 		c.lineCounts[fileType] = lines + comments
 	}
+	return nil
 }
 
 // add Adds the contents of the counter with another counter
@@ -92,7 +100,7 @@ func main() {
 	fmt.Printf("Total: %v\n", countr.total())
 }
 
-// Reads the contents of a single file and returns line count (without newlines and comments) and 
+// Reads the contents of a single file and returns line count (without empty new lines and comments) and
 // number of comments.
 func lineCount(file *os.File) (lines int, comment int, e error) {
 	s := bufio.NewReader(file)
@@ -135,7 +143,7 @@ func lineCount(file *os.File) (lines int, comment int, e error) {
 }
 
 // count recursively reads a directory (excluding directories starting with '.') and whenever it
-// encounters a file (with extension and if it is supported), it counts the lines of that file 
+// encounters a file (with extension and if it is supported), it counts the lines of that file
 // using lineCount() and returns a counter.
 func count(file *os.File) (counter, error) {
 	var countr counter
@@ -158,7 +166,6 @@ func count(file *os.File) (counter, error) {
 			if e != nil {
 				return counter{}, e
 			}
-
 			recursiveCountr, e := count(f)
 			if e != nil {
 				return counter{}, e
@@ -167,25 +174,24 @@ func count(file *os.File) (counter, error) {
 		}
 		return countr, nil
 	}
+	switch filepath.Ext(file.Name()) {
+	case ".go":
+		e = countr.fileAdd(true, goFiles, file)
+	case ".md":
+		e = countr.fileAdd(false, markdown, file)
+	case ".rs":
+		e = countr.fileAdd(true, rust, file)
+	case ".kt":
+		e = countr.fileAdd(true, kotlin, file)
+	case ".java":
+		e = countr.fileAdd(true, java, file)
+	case ".c":
+		e = countr.fileAdd(true, c, file)
+	}
 
-	countr.fileCount++
-	lines, comments, e := lineCount(file)
 	if e != nil {
 		return counter{}, e
 	}
-	switch filepath.Ext(file.Name()) {
-	case ".go":
-		countr.fileAdd(comments, lines, true, goFiles, file)
-	case ".md":
-		countr.fileAdd(comments, lines, false, markdown, file)
-	case ".rs":
-		countr.fileAdd(comments, lines, true, rust, file)
-	case ".kt":
-		countr.fileAdd(comments, lines, true, kotlin, file)
-	case ".java":
-		countr.fileAdd(comments, lines, true, java, file)
-	}
-
 	return countr, nil
 }
 
