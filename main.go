@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 var verbose = flag.Bool("v", false, "Prints the files scanned. Usage: -v <true/false>")
@@ -18,13 +19,18 @@ var verbose = flag.Bool("v", false, "Prints the files scanned. Usage: -v <true/f
 type supportedType string
 
 const (
-	goFiles  supportedType = "Go"
-	rust     supportedType = "Rust"
-	comment  supportedType = "Comments"
-	markdown supportedType = "Markdown"
-	kotlin   supportedType = "Kotlin"
-	java     supportedType = "Java"
-	c        supportedType = "C"
+	goFiles    supportedType = "Go"
+	rust       supportedType = "Rust"
+	comment    supportedType = "Comments"
+	markdown   supportedType = "Markdown"
+	kotlin     supportedType = "Kotlin"
+	java       supportedType = "Java"
+	c          supportedType = "C"
+	cSharp     supportedType = "CSharp"
+	javaScript supportedType = "JavaScript"
+	cpp        supportedType = "C++"
+	sql        supportedType = "SQL"
+	php        supportedType = "PHP"
 )
 
 // counter contains information of the line count and number of files counted
@@ -91,13 +97,16 @@ func main() {
 	}
 	file, e := os.Open(path)
 	checkError(e)
+	now := time.Now()
 	countr, e := count(file)
 	checkError(e)
+	timeTaken := time.Now().Sub(now)
 	fmt.Printf("Files Counted: %v\n", countr.fileCount)
 	for _, s := range countr.getElems() {
 		fmt.Println(s)
 	}
 	fmt.Printf("Total: %v\n", countr.total())
+	fmt.Printf("Time Taken: %v seconds", timeTaken.Seconds())
 }
 
 // Reads the contents of a single file and returns line count (without empty new lines and comments) and
@@ -187,6 +196,16 @@ func count(file *os.File) (counter, error) {
 		e = countr.fileAdd(true, java, file)
 	case ".c":
 		e = countr.fileAdd(true, c, file)
+	case ".cs":
+		e = countr.fileAdd(true, cSharp, file)
+	case ".js":
+		e = countr.fileAdd(true, javaScript, file)
+	case ".cpp":
+		e = countr.fileAdd(true, cpp, file)
+	case ".sql":
+		e = countr.fileAdd(true, sql, file)
+	case ".php":
+		e = countr.fileAdd(true, php, file)
 	}
 
 	if e != nil {
